@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -26,5 +28,21 @@ func main() {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Hello World")
+	err := render(w, "index.html", nil)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func render(w io.Writer, filename string, data interface{}) error {
+	tmpl, err := template.ParseFiles("template/layout.html", "template/"+filename)
+	if err != nil {
+		return err
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		return err
+	}
+
+	return nil
 }
