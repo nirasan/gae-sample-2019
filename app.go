@@ -13,6 +13,8 @@ func main() {
 	// HTTP リクエストの処理関数の登録
 	// `/` へのリクエストで `indexHandler` 関数を実行する
 	http.HandleFunc("/", indexHandler)
+	// `/public/` へのリクエストで /public ディレクトリ以下の静的ファイルを配信する
+	http.Handle("/public/", http.FileServer(http.Dir("./")))
 
 	// HTTP サーバーの待受ポートの設定
 	// GAE では環境変数 PORT で待受ポートが指定される
