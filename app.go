@@ -17,7 +17,8 @@ func main() {
 	http.HandleFunc("/", indexHandler)
 	// `/public/` へのリクエストで /public ディレクトリ以下の静的ファイルを配信する
 	http.Handle("/public/", http.FileServer(http.Dir("./")))
-	http.HandleFunc("/user/", userHandler)
+	// Datastore へ読み書きをする関数の登録
+	http.HandleFunc("/user/datastore/", datastoreUserHandler)
 
 	// HTTP サーバーの待受ポートの設定
 	// GAE では環境変数 PORT で待受ポートが指定される
@@ -48,45 +49,77 @@ func render(w io.Writer, filename string, data interface{}) error {
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	err := render(w, "index.html", nil)
 	if err != nil {
-		panic(err)
+		internalServerErrorHandler(w, err)
 	}
 }
 
-func userHandler(w http.ResponseWriter, r *http.Request) {
+func datastoreUserHandler(w http.ResponseWriter, r *http.Request) {
 	c, err := NewDatastoreClient()
 	if err != nil {
-		panic(err)
+		internalServerErrorHandler(w, err)
+		return
 	}
 	switch r.Method {
 	case "GET":
-		users, err := c.ListUsers()
-		if err != nil {
-			panic(err)
+		if err := datastoreUserGetHandler(w, c); err != nil {
+			internalServerErrorHandler(w, err)
+			return
 		}
-		data, err := json.Marshal(users)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Fprintf(w, string(data))
 	case "POST":
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			panic(err)
+		if err := datastoreUserPostHandler(w, c); err != nil {
+			internalServerErrorHandler(w, err)
+			return
 		}
-		u := &User{}
-		err = json.Unmarshal(body, u)
-		if err != nil {
-			panic(err)
-		}
-		id, err := c.AddUser(u)
-		if err != nil {
-			panic(err)
-		}
-		u.ID = id
-		data, err := json.Marshal(u)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Fprintf(w, string(data))
 	}
+}
+
+func datastoreUserGetHandler(w http.ResponseWriter, c *datastoreClient) error {
+	users, err := c.ListUsers()
+	if err != nil {
+		return err
+	}
+
+	data, err := json.Marshal(users)
+	if err != nil {
+		return err
+	}
+
+	if _, err := fmt.Fprintf(w, string(data)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func datastoreUserPostHandler(w http.ResponseWriter, c *datastoreClient) error {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+
+	u := &User{}
+	if err := json.Unmarshal(body, u); err != nil {
+		return err
+	}
+
+	id, err := c.AddUser(u)
+	if err != nil {
+		return err
+	}
+
+	u.ID = id
+	data, err := json.Marshal(u)
+	if err != nil {
+		return err
+	}
+
+	if _, err := fmt.Fprintf(w, string(data)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func internalServerErrorHandler(w http.ResponseWriter, err error) {
+	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
