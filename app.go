@@ -66,7 +66,7 @@ func datastoreUserHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case "POST":
-		if err := datastoreUserPostHandler(w, c); err != nil {
+		if err := datastoreUserPostHandler(w, r, c); err != nil {
 			internalServerErrorHandler(w, err)
 			return
 		}
@@ -91,7 +91,7 @@ func datastoreUserGetHandler(w http.ResponseWriter, c *datastoreClient) error {
 	return nil
 }
 
-func datastoreUserPostHandler(w http.ResponseWriter, c *datastoreClient) error {
+func datastoreUserPostHandler(w http.ResponseWriter, r *http.Request, c *datastoreClient) error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return err
