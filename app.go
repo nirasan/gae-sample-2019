@@ -1,14 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 func main() {
@@ -79,12 +78,7 @@ func datastoreUserGetHandler(w http.ResponseWriter, c *datastoreClient) error {
 		return err
 	}
 
-	data, err := json.Marshal(users)
-	if err != nil {
-		return err
-	}
-
-	if _, err := fmt.Fprintf(w, string(data)); err != nil {
+	if err := render(w, "user_datastore.html", map[string]interface{}{"Users": users}); err != nil {
 		return err
 	}
 
@@ -92,28 +86,25 @@ func datastoreUserGetHandler(w http.ResponseWriter, c *datastoreClient) error {
 }
 
 func datastoreUserPostHandler(w http.ResponseWriter, r *http.Request, c *datastoreClient) error {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
+	if err := r.ParseForm(); err != nil {
 		return err
 	}
 
 	u := &User{}
-	if err := json.Unmarshal(body, u); err != nil {
+	age, err := strconv.ParseInt(r.Form.Get("Age"), 10, 64)
+	if err != nil {
 		return err
 	}
+	u.Age = age
+	u.Name = r.Form.Get("Name")
 
 	id, err := c.AddUser(u)
 	if err != nil {
 		return err
 	}
-
 	u.ID = id
-	data, err := json.Marshal(u)
-	if err != nil {
-		return err
-	}
 
-	if _, err := fmt.Fprintf(w, string(data)); err != nil {
+	if err := render(w, "user_datastore.html", map[string]interface{}{"Created": u}); err != nil {
 		return err
 	}
 

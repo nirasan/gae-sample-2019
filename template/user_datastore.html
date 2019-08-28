@@ -1,0 +1,47 @@
+{{ define "content" }}
+    {{ if .Created }}
+        <h3>User created</h3>
+        <div>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Age</th>
+                </tr>
+                <tr>
+                    <td>{{ .Created.ID }}</td>
+                    <td>{{ .Created.Name }}</td>
+                    <td>{{ .Created.Age }}</td>
+                </tr>
+            </table>
+            <a href="/user/datastore/">User TOP</a>
+        </div>
+    {{ end }}
+
+    {{ if .Users }}
+        <div>
+            <h3>Create user</h3>
+            <form method="POST">
+                <label for="input-name">Name</label><input id="input-name" type="text" name="Name" /><br />
+                <label for="input-age">Age</label><input id="input-age" type="text" name="Age" /><br />
+                <input type="submit" />
+            </form>
+            <h3>Users</h3>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th></th>
+                </tr>
+                {{ range .Users }}
+                    <tr>
+                        <td>{{ .ID }}</td>
+                        <td>{{ .Name }}</td>
+                        <td>{{ .Age }}</td>
+                    </tr>
+                {{ end }}
+            </table>
+        </div>
+    {{ end }}
+{{ end }}
