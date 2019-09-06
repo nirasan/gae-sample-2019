@@ -17,7 +17,7 @@ func main() {
 	// `/public/` へのリクエストで /public ディレクトリ以下の静的ファイルを配信する
 	http.Handle("/public/", http.FileServer(http.Dir("./")))
 	// Datastore へ読み書きをする関数の登録
-	http.HandleFunc("/user/datastore/", datastoreUserHandler)
+	http.HandleFunc("/user/", userHandler)
 
 	// HTTP サーバーの待受ポートの設定
 	// GAE では環境変数 PORT で待受ポートが指定される
@@ -52,7 +52,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func datastoreUserHandler(w http.ResponseWriter, r *http.Request) {
+func userHandler(w http.ResponseWriter, r *http.Request) {
 	c, err := NewDatastoreClient()
 	if err != nil {
 		internalServerErrorHandler(w, err)
@@ -60,7 +60,7 @@ func datastoreUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	switch r.Method {
 	case "GET":
-		if err := datastoreUserGetHandler(w, c); err != nil {
+		if err := userGetHandler(w, c); err != nil {
 			internalServerErrorHandler(w, err)
 			return
 		}
@@ -71,12 +71,12 @@ func datastoreUserHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		switch r.Form.Get("_method") {
 		case "DELETE":
-			if err := datastoreUserDeleteHandler(w, r, c); err != nil {
+			if err := userDeleteHandler(w, r, c); err != nil {
 				internalServerErrorHandler(w, err)
 				return
 			}
 		default:
-			if err := datastoreUserPostHandler(w, r, c); err != nil {
+			if err := userPostHandler(w, r, c); err != nil {
 				internalServerErrorHandler(w, err)
 				return
 			}
@@ -84,7 +84,7 @@ func datastoreUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func datastoreUserGetHandler(w http.ResponseWriter, c *datastoreClient) error {
+func userGetHandler(w http.ResponseWriter, c *datastoreClient) error {
 	users, err := c.ListUsers()
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func datastoreUserGetHandler(w http.ResponseWriter, c *datastoreClient) error {
 	return nil
 }
 
-func datastoreUserPostHandler(w http.ResponseWriter, r *http.Request, c *datastoreClient) error {
+func userPostHandler(w http.ResponseWriter, r *http.Request, c *datastoreClient) error {
 	u := &User{}
 	age, err := strconv.ParseInt(r.Form.Get("Age"), 10, 64)
 	if err != nil {
@@ -119,7 +119,7 @@ func datastoreUserPostHandler(w http.ResponseWriter, r *http.Request, c *datasto
 	return nil
 }
 
-func datastoreUserDeleteHandler(w http.ResponseWriter, r *http.Request, c *datastoreClient) error {
+func userDeleteHandler(w http.ResponseWriter, r *http.Request, c *datastoreClient) error {
 	id, err := strconv.ParseInt(r.Form.Get("Id"), 10, 64)
 	if err != nil {
 		return err
