@@ -33,7 +33,7 @@ func (c *datastoreClient) GetUser(id int64) (*User, error) {
 	k := datastore.IDKey("User", id, nil)
 	u := &User{}
 	if err := c.client.Get(ctx, k, u); err != nil {
-		return nil, fmt.Errorf("datastoredb: could not get User: %v", err)
+		return nil, fmt.Errorf("datastoreClient: could not get User: %v", err)
 	}
 	u.ID = id
 	return u, nil
@@ -44,9 +44,19 @@ func (c *datastoreClient) AddUser(u *User) (int64, error) {
 	k := datastore.IncompleteKey("User", nil)
 	k, err := c.client.Put(ctx, k, u)
 	if err != nil {
-		return 0, fmt.Errorf("datastoredb: could not put User: %v", err)
+		return 0, fmt.Errorf("datastoreClient: could not put User: %v", err)
 	}
 	return k.ID, nil
+}
+
+func (c *datastoreClient) DeleteUser(id int64) error {
+	ctx := context.Background()
+	k := datastore.IDKey("User", id, nil)
+	err := c.client.Delete(ctx, k)
+	if err != nil {
+		return fmt.Errorf("datastoreClient: could not delete User: %v", err)
+	}
+	return nil
 }
 
 func (c *datastoreClient) ListUsers() ([]*User, error) {
@@ -58,7 +68,7 @@ func (c *datastoreClient) ListUsers() ([]*User, error) {
 	keys, err := c.client.GetAll(ctx, q, &users)
 
 	if err != nil {
-		return nil, fmt.Errorf("datastoredb: could not list users: %v", err)
+		return nil, fmt.Errorf("datastoreClient: could not list users: %v", err)
 	}
 
 	for i, k := range keys {

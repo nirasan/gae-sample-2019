@@ -65,9 +65,21 @@ func datastoreUserHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case "POST":
-		if err := datastoreUserPostHandler(w, r, c); err != nil {
+		if err := r.ParseForm(); err != nil {
 			internalServerErrorHandler(w, err)
 			return
+		}
+		switch r.Form.Get("_method") {
+		case "DELETE":
+			if err := datastoreUserDeleteHandler(w, r, c); err != nil {
+				internalServerErrorHandler(w, err)
+				return
+			}
+		default:
+			if err := datastoreUserPostHandler(w, r, c); err != nil {
+				internalServerErrorHandler(w, err)
+				return
+			}
 		}
 	}
 }
@@ -86,10 +98,6 @@ func datastoreUserGetHandler(w http.ResponseWriter, c *datastoreClient) error {
 }
 
 func datastoreUserPostHandler(w http.ResponseWriter, r *http.Request, c *datastoreClient) error {
-	if err := r.ParseForm(); err != nil {
-		return err
-	}
-
 	u := &User{}
 	age, err := strconv.ParseInt(r.Form.Get("Age"), 10, 64)
 	if err != nil {
@@ -105,6 +113,23 @@ func datastoreUserPostHandler(w http.ResponseWriter, r *http.Request, c *datasto
 	u.ID = id
 
 	if err := render(w, "user_datastore.html", map[string]interface{}{"Created": u}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func datastoreUserDeleteHandler(w http.ResponseWriter, r *http.Request, c *datastoreClient) error {
+	id, err := strconv.ParseInt(r.Form.Get("Id"), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	if err := c.DeleteUser(id); err != nil {
+		return err
+	}
+
+	if err := render(w, "user_datastore.html", map[string]interface{}{"Deleted": id}); err != nil {
 		return err
 	}
 

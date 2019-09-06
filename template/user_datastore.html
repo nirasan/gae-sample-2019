@@ -18,6 +18,21 @@
         </div>
     {{ end }}
 
+    {{ if .Deleted }}
+        <h3>User deleted</h3>
+        <div>
+            <table>
+                <tr>
+                    <th>ID</th>
+                </tr>
+                <tr>
+                    <td>{{ .Deleted }}</td>
+                </tr>
+            </table>
+            <a href="/user/datastore/">User TOP</a>
+        </div>
+    {{ end }}
+
     {{ if .Users }}
         <div>
             <h3>Create user</h3>
@@ -39,6 +54,13 @@
                         <td>{{ .ID }}</td>
                         <td>{{ .Name }}</td>
                         <td>{{ .Age }}</td>
+                        <td>
+                            <form method="POST">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <input type="hidden" name="Id" value="{{ .ID }}" />
+                                <input type="submit" value="delete" />
+                            </form>
+                        </td>
                     </tr>
                 {{ end }}
             </table>
